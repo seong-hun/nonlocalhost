@@ -55,8 +55,14 @@ export function TokenPanel() {
           </code>
           <p className="text-sm text-emerald-300">맥북 등에서 실행할 명령 (최초 1회, 토큰 저장):</p>
           <code className="block break-all rounded bg-slate-950 p-2 text-xs text-slate-200">
-            nonlocalhost 5173 --subdomain myapp --token {justCreated} --save
+            nonlocalhost 5173 --subdomain myapp --server {window.location.host} --token{" "}
+            {justCreated} --save
           </code>
+          <p className="text-xs text-slate-500">
+            --server에는 스킴(https://, wss://) 없이 도메인만 입력합니다. 이후에는{" "}
+            <code className="text-slate-400">~/.config/nonlocalhost/config.json</code>에 저장된
+            값을 자동으로 쓰므로 --server, --token 없이 다시 실행할 수 있습니다.
+          </p>
         </div>
       )}
 

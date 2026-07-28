@@ -110,11 +110,12 @@ tunnel.example.com, *.tunnel.example.com {
 1. 대시보드에 로그인(`ADMIN_SEED`로 만든 계정) → "CLI 토큰" 섹션에서 토큰 발급
 2. 로컬 머신에서:
    ```bash
-   bun run apps/cli/src/index.ts <포트> --subdomain <이름> --token <발급받은 토큰> --save
+   bun run apps/cli/src/index.ts <포트> --subdomain <이름> --server <도메인> --token <발급받은 토큰> --save
    ```
-   `--save`는 최초 1회만 필요하고, 이후에는 `~/.config/nonlocalhost/config.json`에 저장된
-   토큰/서버 정보를 자동으로 사용한다. `bun build --compile`로 단일 바이너리를 만들어서
-   배포해도 된다:
+   `--server`에는 스킴(`https://`, `wss://`) 없이 `PUBLIC_BASE_DOMAIN` 값만 넣는다 (예:
+   `tunnel.example.com`). `--save`는 최초 1회만 필요하고, 이후에는
+   `~/.config/nonlocalhost/config.json`에 저장된 토큰/서버 정보를 자동으로 사용한다.
+   `bun build --compile`로 단일 바이너리를 만들어서 배포해도 된다:
    ```bash
    cd apps/cli && bun run build   # dist/nonlocalhost
    ```
