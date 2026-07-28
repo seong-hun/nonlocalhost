@@ -6,7 +6,6 @@ describe("parseArgs", () => {
     const args = parseArgs(["5173", "--subdomain", "myapp"]);
     expect(args.port).toBe(5173);
     expect(args.subdomain).toBe("myapp");
-    expect(args.localHost).toBe("localhost");
     expect(args.insecure).toBe(false);
   });
 
@@ -35,8 +34,11 @@ describe("parseArgs", () => {
     });
   });
 
-  test("throws when subdomain is missing", () => {
-    expect(() => parseArgs(["3000"])).toThrow();
+  test("port and subdomain are optional so a saved project config can fill them in", () => {
+    const args = parseArgs([]);
+    expect(args.port).toBeUndefined();
+    expect(args.subdomain).toBeUndefined();
+    expect(args.localHost).toBeUndefined();
   });
 
   test("throws when port is not a number", () => {

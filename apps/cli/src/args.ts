@@ -1,22 +1,34 @@
 export interface CliArgs {
-  port: number;
-  subdomain: string;
+  port?: number;
+  subdomain?: string;
   token?: string;
   server?: string;
-  localHost: string;
+  localHost?: string;
   insecure: boolean;
   save: boolean;
 }
 
-const USAGE =
-  "Usage: nonlocalhost <port> --subdomain <name> [--token <token>] [--server <host>] [--save]";
+const USAGE = `Usage:
+  nonlocalhost <port> [--subdomain <name>] [options]
+  nonlocalhost login [--token <token>] [--server <host>]
+
+Options:
+  -s, --subdomain <name>   public subdomain (reused from .nonlocalhost.json if omitted)
+      --token <token>      auth token (falls back to NONLOCALHOST_TOKEN, then saved login)
+      --server <host>      tunnel server host (falls back to NONLOCALHOST_SERVER, then saved login)
+      --local-host <host>  host to forward to (default: localhost)
+      --insecure           use ws/http instead of wss/https
+      --save               remember port/subdomain in .nonlocalhost.json (and token/server via login)
+  -h, --help               show this help`;
+
+export { USAGE };
 
 export function parseArgs(argv: string[]): CliArgs {
   const positional: string[] = [];
   let subdomain: string | undefined;
   let token: string | undefined;
   let server: string | undefined;
-  let localHost = "localhost";
+  let localHost: string | undefined;
   let insecure = false;
   let save = false;
 
@@ -52,12 +64,12 @@ export function parseArgs(argv: string[]): CliArgs {
     }
   }
 
-  const port = Number(positional[0]);
-  if (!Number.isInteger(port) || port <= 0) {
-    throw new Error(USAGE);
-  }
-  if (!subdomain) {
-    throw new Error(`--subdomain <name> is required\n${USAGE}`);
+  let port: number | undefined;
+  if (positional.length > 0) {
+    port = Number(positional[0]);
+    if (!Number.isInteger(port) || port <= 0) {
+      throw new Error(`invalid port: ${positional[0]}\n${USAGE}`);
+    }
   }
 
   return { port, subdomain, token, server, localHost, insecure, save };
