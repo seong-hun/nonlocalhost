@@ -15,8 +15,13 @@ async function main() {
     process.exit(1);
   }
 
-  const server =
-    args.server ?? process.env.NONLOCALHOST_SERVER ?? config.server ?? "tunnel.example.com";
+  const server = args.server ?? process.env.NONLOCALHOST_SERVER ?? config.server;
+  if (!server) {
+    console.error(
+      "[nonlocalhost] no server configured. Pass --server, set NONLOCALHOST_SERVER, or run once with --server --save."
+    );
+    process.exit(1);
+  }
 
   if (args.save) {
     await writeConfig({ token, server });
