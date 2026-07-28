@@ -1,0 +1,17 @@
+{
+  "name": "nonlocalhost",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:api": "bun run --filter '@nonlocalhost/api' dev",
+    "dev:web": "bun run --filter '@nonlocalhost/web' dev",
+    "dev": "bun run dev:api",
+    "test": "bun test",
+    "format": "biome format --write apps packages",
+    "lint": "biome check apps packages",
+    "check:fix": "biome check --write apps packages"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0"
+  }
+}

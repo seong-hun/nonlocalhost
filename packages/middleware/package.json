@@ -1,0 +1,15 @@
+{
+  "name": "@nonlocalhost/middleware",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {
+    "@nonlocalhost/shared": "workspace:*",
+    "hono": "^4.12.25",
+    "jose": "^5.10.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  }
+}

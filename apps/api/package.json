@@ -1,0 +1,24 @@
+{
+  "name": "@nonlocalhost/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@nonlocalhost/db": "workspace:*",
+    "@nonlocalhost/middleware": "workspace:*",
+    "@nonlocalhost/shared": "workspace:*",
+    "drizzle-orm": "^0.44.5",
+    "hono": "^4.12.25",
+    "jose": "^5.10.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  }
+}

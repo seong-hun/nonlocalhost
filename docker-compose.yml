@@ -1,0 +1,31 @@
+services:
+  nonlocalhost-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PUBLIC_BASE_DOMAIN: ${PUBLIC_BASE_DOMAIN:-tunnel.example.com}
+      DATABASE_PATH: /app/data/nonlocalhost.db
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-7}
+      # 관리자 계정 부트스트랩: email:password. 없으면 생성, 있으면 동기화됨.
+      ADMIN_SEED: ${ADMIN_SEED:?ADMIN_SEED is required}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://tunnel.example.com}
+      # Docker CWD는 /app이므로 web dist 경로가 로컬 개발 환경과 다름
+      WEB_DIST_ROOT: apps/web/dist
+    volumes:
+      - nonlocalhost_data:/app/data
+    networks:
+      - caddy_network # Caddy가 이 컨테이너에 접근할 수 있도록 공유 네트워크 조인
+    restart: unless-stopped
+
+networks:
+  caddy_network:
+    # Caddy compose(/home/seong-hun/docker/caddy)가 먼저 생성한 네트워크에 조인
+    external: true
+
+volumes:
+  nonlocalhost_data:
