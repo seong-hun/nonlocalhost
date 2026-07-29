@@ -6,6 +6,7 @@ import {
   type RequestFrame,
   type ServerFrame,
 } from "@nonlocalhost/shared";
+import { color, statusColor } from "./colors";
 
 export interface RunOptions {
   server: string;
@@ -19,20 +20,51 @@ export interface RunOptions {
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30_000;
 
+interface ConnectResult {
+  welcomed: boolean;
+  // set when the server rejected the handshake itself (bad token/subdomain);
+  // retrying with the same args would just fail the same way, so don't loop
+  fatal?: string;
+}
+
+let activeWs: WebSocket | null = null;
+let shuttingDown = false;
+
+function installShutdownHandler(): void {
+  const shutdown = (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`\n${color.gray(`[nonlocalhost] received ${signal}, shutting down...`)}`);
+    activeWs?.close(1000, "client shutdown");
+    process.exit(0);
+  };
+  process.once("SIGINT", () => shutdown("SIGINT"));
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+}
+
 export async function runTunnel(opts: RunOptions): Promise<never> {
+  installShutdownHandler();
+
   let attempt = 0;
   for (;;) {
-    let welcomed = false;
+    let result: ConnectResult;
     try {
-      welcomed = await connectOnce(opts);
+      result = await connectOnce(opts);
     } catch (err) {
-      console.error(`[nonlocalhost] connection error: ${(err as Error).message}`);
+      result = { welcomed: false };
+      console.error(color.red(`[nonlocalhost] connection error: ${(err as Error).message}`));
     }
 
-    attempt = welcomed ? 0 : attempt + 1;
+    if (result.fatal) {
+      console.error(color.red(`[nonlocalhost] rejected: ${result.fatal}`));
+      console.error(color.gray("[nonlocalhost] not retrying — fix this and run again."));
+      process.exit(1);
+    }
+
+    attempt = result.welcomed ? 0 : attempt + 1;
     const delay =
       Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * 2 ** attempt) + Math.random() * 500;
-    console.log(`[nonlocalhost] reconnecting in ${Math.round(delay / 1000)}s...`);
+    console.log(color.yellow(`[nonlocalhost] reconnecting in ${Math.round(delay / 1000)}s...`));
     await Bun.sleep(delay);
   }
 }
@@ -42,13 +74,15 @@ function wsUrl(opts: RunOptions): string {
   return `${scheme}://${opts.server}/_ws/tunnel`;
 }
 
-// 연결 하나의 생명주기를 처리한다. handshake(welcome)까지 도달했었는지를 resolve로 알려줘서
-// 호출자가 재연결 backoff를 리셋할지 판단할 수 있게 한다.
-function connectOnce(opts: RunOptions): Promise<boolean> {
+// 연결 하나의 생명주기를 처리한다. handshake(welcome)까지 도달했었는지와, 서버가 handshake
+// 자체를 거절했는지(fatal)를 알려줘서 호출자가 재연결 여부/backoff를 판단할 수 있게 한다.
+function connectOnce(opts: RunOptions): Promise<ConnectResult> {
   return new Promise((resolve) => {
     const ws = new WebSocket(wsUrl(opts));
     ws.binaryType = "arraybuffer";
     let welcomed = false;
+    let fatal: string | undefined;
+    activeWs = ws;
 
     ws.addEventListener("open", () => {
       ws.send(
@@ -68,26 +102,34 @@ function connectOnce(opts: RunOptions): Promise<boolean> {
           printWelcome(opts, header.subdomain);
           break;
         case "error":
-          console.error(`[nonlocalhost] server error: ${header.message}`);
+          // server always closes right after an error frame, and only ever sends
+          // one pre-welcome (bad token/subdomain/timeout) — treat it as fatal
+          fatal = header.message;
+          console.error(color.red(`[nonlocalhost] server error: ${header.message}`));
           break;
         case "ping":
           ws.send(encodeFrame({ type: "pong" } satisfies ClientFrame));
           break;
         case "request":
           forwardRequest(ws, header, body, opts).catch((err) =>
-            console.error(`[nonlocalhost] request forwarding failed: ${(err as Error).message}`)
+            console.error(
+              color.red(`[nonlocalhost] request forwarding failed: ${(err as Error).message}`)
+            )
           );
           break;
       }
     });
 
     ws.addEventListener("close", (evt) => {
+      if (activeWs === ws) activeWs = null;
       if (welcomed) {
         console.log(
-          `[nonlocalhost] disconnected (${evt.code}${evt.reason ? ` ${evt.reason}` : ""})`
+          color.gray(
+            `[nonlocalhost] disconnected (${evt.code}${evt.reason ? ` ${evt.reason}` : ""})`
+          )
         );
       }
-      resolve(welcomed);
+      resolve({ welcomed, fatal });
     });
 
     ws.addEventListener("error", () => {
@@ -139,11 +181,12 @@ async function forwardRequest(
     }
     ws.send(encodeFrame({ type: "response-end", id: header.id } satisfies ClientFrame));
 
-    console.log(`${header.method} ${header.path} ${res.status} ${Date.now() - start}ms`);
+    const statusText = statusColor(res.status)(String(res.status));
+    console.log(`${header.method} ${header.path} ${statusText} ${Date.now() - start}ms`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     ws.send(encodeFrame({ type: "response-error", id: header.id, message } satisfies ClientFrame));
-    console.log(`${header.method} ${header.path} ERR ${message}`);
+    console.log(`${header.method} ${header.path} ${color.red("ERR")} ${message}`);
   }
 }
 
@@ -151,9 +194,15 @@ function printWelcome(opts: RunOptions, subdomain: string): void {
   const scheme = opts.insecure ? "http" : "https";
   const publicUrl = `${scheme}://${subdomain}.${opts.server}`;
   const hmrHost = `${subdomain}.${opts.server}`;
-  console.log(`[nonlocalhost] connected: ${publicUrl} -> http://${opts.localHost}:${opts.port}`);
-  console.log("[nonlocalhost] Vite 사용 시 vite.config.ts에 아래를 추가하세요:");
   console.log(
-    `  server: { allowedHosts: ["${hmrHost}"], hmr: { host: "${hmrHost}", clientPort: 443 } }`
+    color.green(
+      `[nonlocalhost] connected: ${publicUrl} -> http://${opts.localHost}:${opts.port}`
+    )
+  );
+  console.log(color.gray("[nonlocalhost] Vite 사용 시 vite.config.ts에 아래를 추가하세요:"));
+  console.log(
+    color.gray(
+      `  server: { allowedHosts: ["${hmrHost}"], hmr: { host: "${hmrHost}", clientPort: 443 } }`
+    )
   );
 }
