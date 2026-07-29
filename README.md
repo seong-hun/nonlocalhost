@@ -107,19 +107,34 @@ tunnel.example.com, *.tunnel.example.com {
 
 ## 사용법
 
+CLI는 `bun run apps/cli/src/index.ts ...`로 바로 실행해도 되고, `cd apps/cli && bun link` 한 뒤
+`nonlocalhost` 명령으로 어디서든 실행해도 된다 (아래 예시는 `nonlocalhost`로 표기).
+`bun build --compile`로 단일 바이너리를 만들어서 배포할 수도 있다:
+
+```bash
+cd apps/cli && bun run build   # dist/nonlocalhost
+```
+
 1. 대시보드에 로그인(`ADMIN_SEED`로 만든 계정) → "CLI 토큰" 섹션에서 토큰 발급
-2. 로컬 머신에서:
+2. 로컬 머신에서 계정 정보를 한 번 저장한다 (토큰을 인자로 넘기지 않으면 화면에 안 보이게
+   입력받으므로 쉘 히스토리에 안 남는다):
    ```bash
-   bun run apps/cli/src/index.ts <포트> --subdomain <이름> --server <도메인> --token <발급받은 토큰> --save
+   nonlocalhost login --server <도메인>
+   # Token (hidden): 발급받은 토큰 붙여넣기
    ```
    `--server`에는 스킴(`https://`, `wss://`) 없이 `PUBLIC_BASE_DOMAIN` 값만 넣는다 (예:
-   `tunnel.example.com`). `--save`는 최초 1회만 필요하고, 이후에는
-   `~/.config/nonlocalhost/config.json`에 저장된 토큰/서버 정보를 자동으로 사용한다.
-   `bun build --compile`로 단일 바이너리를 만들어서 배포해도 된다:
+   `tunnel.example.com`). 토큰/서버는 `~/.config/nonlocalhost/config.json`에 `0600` 권한으로
+   저장된다.
+3. 터널을 시작한다:
    ```bash
-   cd apps/cli && bun run build   # dist/nonlocalhost
+   nonlocalhost <포트> --subdomain <이름> --save
    ```
-3. 연결되면 `https://<이름>.<도메인>`으로 어디서든(다른 네트워크 포함) 접속 가능.
+   `--save`는 최초 1회만 필요하고, 포트/서브도메인을 현재 디렉토리의 `.nonlocalhost.json`에
+   저장한다 (시크릿이 아니라 커밋해도 무방). 이후에는 같은 디렉토리에서 인자 없이
+   `nonlocalhost`만 실행해도 저장된 계정/프로젝트 설정을 그대로 사용한다.
+4. 연결되면 `https://<이름>.<도메인>`으로 어디서든(다른 네트워크 포함) 접속 가능. 토큰이
+   잘못됐거나 서브도메인이 이미 쓰이는 중이면 무한 재시도 없이 바로 종료하고 원인을 알려준다.
+   `Ctrl+C`로 정상 종료할 수 있다.
 
 ### Vite 사용 시
 
