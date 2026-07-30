@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { tokensApi } from "../services/tokensApi";
+import { CopyButton } from "./CopyButton";
 
 export function TokenPanel() {
   const queryClient = useQueryClient();
@@ -28,6 +29,10 @@ export function TokenPanel() {
     if (name.trim()) createMutation.mutate(name.trim());
   }
 
+  const installCommand = justCreated
+    ? `nonlocalhost 5173 --subdomain myapp --server ${window.location.host} --token ${justCreated} --save`
+    : "";
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="flex gap-2">
@@ -50,18 +55,19 @@ export function TokenPanel() {
           <p className="text-sm text-emerald-300">
             토큰은 지금 한 번만 표시됩니다. 안전한 곳에 복사해두세요.
           </p>
-          <code className="block break-all rounded bg-slate-950 p-2 text-xs text-slate-200">
-            {justCreated}
-          </code>
+          <div className="flex items-start gap-2 rounded bg-slate-950 p-2">
+            <code className="block flex-1 break-all text-xs text-slate-200">{justCreated}</code>
+            <CopyButton text={justCreated} />
+          </div>
           <p className="text-sm text-emerald-300">맥북 등에서 실행할 명령 (최초 1회, 토큰 저장):</p>
-          <code className="block break-all rounded bg-slate-950 p-2 text-xs text-slate-200">
-            nonlocalhost 5173 --subdomain myapp --server {window.location.host} --token{" "}
-            {justCreated} --save
-          </code>
+          <div className="flex items-start gap-2 rounded bg-slate-950 p-2">
+            <code className="block flex-1 break-all text-xs text-slate-200">{installCommand}</code>
+            <CopyButton text={installCommand} />
+          </div>
           <p className="text-xs text-slate-500">
             --server에는 스킴(https://, wss://) 없이 도메인만 입력합니다. 이후에는{" "}
-            <code className="text-slate-400">~/.config/nonlocalhost/config.json</code>에 저장된
-            값을 자동으로 쓰므로 --server, --token 없이 다시 실행할 수 있습니다.
+            <code className="text-slate-400">~/.config/nonlocalhost/config.json</code>에 저장된 값을
+            자동으로 쓰므로 --server, --token 없이 다시 실행할 수 있습니다.
           </p>
         </div>
       )}
