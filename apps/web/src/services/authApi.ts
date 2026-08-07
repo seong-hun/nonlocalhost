@@ -4,6 +4,7 @@ import { api, type StoredAuth } from "./api";
 export interface Me {
   id: string;
   email: string;
+  role: "admin" | "member";
 }
 
 export const authApi = {
@@ -15,5 +16,9 @@ export const authApi = {
   me: async (): Promise<Me> => {
     const { data } = await api.get<Me>("/auth/me");
     return data;
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await api.post("/auth/change-password", { currentPassword, newPassword });
   },
 };

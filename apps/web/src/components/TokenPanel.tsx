@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { KeyRound, Terminal, Trash2, TriangleAlert } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { tokensApi } from "../services/tokensApi";
 import { CopyButton } from "./CopyButton";
@@ -40,27 +41,32 @@ export function TokenPanel() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="예: macbook"
-          className="flex-1 rounded border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+          className="flex-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
         <button
           type="submit"
-          className="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+          className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
         >
+          <KeyRound className="h-4 w-4" />
           토큰 발급
         </button>
       </form>
 
       {justCreated && (
-        <div className="space-y-2 rounded border border-emerald-800 bg-emerald-950/40 p-4">
-          <p className="text-sm text-emerald-300">
+        <div className="space-y-3 rounded-lg border border-emerald-800 bg-emerald-950/30 p-4">
+          <p className="flex items-center gap-1.5 text-sm text-emerald-300">
+            <TriangleAlert className="h-4 w-4 shrink-0" />
             토큰은 지금 한 번만 표시됩니다. 안전한 곳에 복사해두세요.
           </p>
-          <div className="flex items-start gap-2 rounded bg-slate-950 p-2">
+          <div className="flex items-start gap-2 rounded-md bg-slate-950 p-2.5">
             <code className="block flex-1 break-all text-xs text-slate-200">{justCreated}</code>
             <CopyButton text={justCreated} />
           </div>
-          <p className="text-sm text-emerald-300">맥북 등에서 실행할 명령 (최초 1회, 토큰 저장):</p>
-          <div className="flex items-start gap-2 rounded bg-slate-950 p-2">
+          <p className="flex items-center gap-1.5 text-sm text-emerald-300">
+            <Terminal className="h-4 w-4 shrink-0" />
+            맥북 등에서 실행할 명령 (최초 1회, 토큰 저장):
+          </p>
+          <div className="flex items-start gap-2 rounded-md bg-slate-950 p-2.5">
             <code className="block flex-1 break-all text-xs text-slate-200">{installCommand}</code>
             <CopyButton text={installCommand} />
           </div>
@@ -72,31 +78,42 @@ export function TokenPanel() {
         </div>
       )}
 
-      <ul className="divide-y divide-slate-800 rounded-lg border border-slate-800">
-        {tokens?.map((t) => (
-          <li key={t.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-slate-100">{t.name}</p>
-              <p className="text-xs text-slate-500">
-                {t.revokedAt
-                  ? "폐기됨"
-                  : t.lastUsedAt
-                    ? `마지막 사용: ${new Date(t.lastUsedAt).toLocaleString()}`
-                    : "아직 사용 안 함"}
-              </p>
-            </div>
-            {!t.revokedAt && (
-              <button
-                type="button"
-                onClick={() => removeMutation.mutate(t.id)}
-                className="text-sm text-red-400 hover:text-red-300"
-              >
-                폐기
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {tokens?.length ? (
+        <ul className="divide-y divide-slate-800 overflow-hidden rounded-lg border border-slate-800">
+          {tokens.map((t) => (
+            <li
+              key={t.id}
+              className={`group flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 ${t.revokedAt ? "opacity-50" : ""}`}
+            >
+              <div>
+                <p className="text-sm text-slate-100">{t.name}</p>
+                <p className="text-xs text-slate-500">
+                  {t.revokedAt
+                    ? "폐기됨"
+                    : t.lastUsedAt
+                      ? `마지막 사용: ${new Date(t.lastUsedAt).toLocaleString()}`
+                      : "아직 사용 안 함"}
+                </p>
+              </div>
+              {!t.revokedAt && (
+                <button
+                  type="button"
+                  onClick={() => removeMutation.mutate(t.id)}
+                  title="폐기"
+                  className="rounded-md p-1.5 text-slate-500 opacity-0 transition-opacity hover:bg-red-950/40 hover:text-red-400 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-800 py-10 text-center">
+          <KeyRound className="h-5 w-5 text-slate-600" />
+          <p className="text-sm text-slate-400">아직 발급된 토큰이 없습니다.</p>
+        </div>
+      )}
     </div>
   );
 }

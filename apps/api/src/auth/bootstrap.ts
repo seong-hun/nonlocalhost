@@ -32,17 +32,23 @@ export async function bootstrapAdmin(): Promise<void> {
   if (existing) {
     const emailMatches = existing.email === email;
     const passwordMatches = await Bun.password.verify(password, existing.passwordHash);
-    if (emailMatches && passwordMatches) return;
+    const roleMatches = existing.role === "admin";
+    if (emailMatches && passwordMatches && roleMatches) return;
 
     const passwordHash = passwordMatches
       ? existing.passwordHash
       : await Bun.password.hash(password, { algorithm: "bcrypt", cost: 12 });
-    await db.update(users).set({ email, passwordHash }).where(eq(users.id, ADMIN_ID));
+    await db
+      .update(users)
+      .set({ email, passwordHash, role: "admin" })
+      .where(eq(users.id, ADMIN_ID));
     console.log("[api] Admin account synced from ADMIN_SEED.");
     return;
   }
 
   const passwordHash = await Bun.password.hash(password, { algorithm: "bcrypt", cost: 12 });
-  await db.insert(users).values({ id: ADMIN_ID, email, passwordHash, createdAt: new Date() });
+  await db
+    .insert(users)
+    .values({ id: ADMIN_ID, email, passwordHash, role: "admin", createdAt: new Date() });
   console.log(`[api] Admin account created: ${email}`);
 }

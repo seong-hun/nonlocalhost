@@ -7,6 +7,7 @@ import { authRouter } from "./auth/router";
 import { internalRouter } from "./internal/router";
 import { tokensRouter } from "./tokens/router";
 import { tunnelsRouter } from "./tunnels/router";
+import { usersRouter } from "./users/router";
 
 const app = new Hono();
 
@@ -22,6 +23,7 @@ app.use(
 app.route("/api/auth", authRouter);
 app.route("/api/tunnels", tunnelsRouter);
 app.route("/api/tokens", tokensRouter);
+app.route("/api/users", usersRouter);
 app.route("/internal", internalRouter);
 
 app.get("/api/health", (c) => c.json({ status: "ok" }));
