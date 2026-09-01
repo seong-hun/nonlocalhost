@@ -1,6 +1,6 @@
 # nonlocalhost
 
-Self-hosted ngrok/localtunnel 대체 서비스. `bunx github:seong-hun/nonlocalhost <port> --subdomain <name>`
+Self-hosted ngrok/localtunnel 대체 서비스. `bunx github:seong-hun/nonlocalhost#master <port> --subdomain <name>`
 하나로 로컬 머신의 포트를 `https://<name>.<your-domain>`으로 공개한다. 포트포워딩 없이 클라이언트가
 서버로 아웃바운드 WebSocket을 열어서 요청을 릴레이하는 구조라 NAT/방화벽 뒤에서도 동작한다.
 
@@ -13,15 +13,25 @@ Self-hosted ngrok/localtunnel 대체 서비스. `bunx github:seong-hun/nonlocalh
 레포를 클론할 필요 없이, 아무 프로젝트 디렉토리에서나 `bunx`로 바로 실행한다.
 
 ```bash
-bunx github:seong-hun/nonlocalhost <포트> --subdomain <이름>
+bunx github:seong-hun/nonlocalhost#master <포트> --subdomain <이름>
 ```
+
+> **`#master`를 꼭 붙일 것.** ref 없이 `github:owner/repo`만 쓰면 bun이 최초 설치 시점의 커밋을
+> 로컬 캐시(`~/.bun/install/cache`)에 영구히 박아두고, 이후엔 GitHub에 재검증 요청조차 안 보낸다
+> — 레포에 새 커밋이 올라가도 계속 옛날 버전이 실행된다. `#master`처럼 ref를 명시하면 실행할
+> 때마다 GitHub API로 그 브랜치의 최신 커밋을 확인하고 받아온다. 이미 ref 없이 실행해서 캐시가
+> 박혀버렸다면 `rm -rf ~/.bun/install/cache/nonlocalhost ~/.bun/install/cache/@GH@seong-hun-nonlocalhost-*`
+> 로 지우고 다시 실행하면 된다.
 
 전역 설치도 가능:
 
 ```bash
-bun add -g github:seong-hun/nonlocalhost
+bun add -g github:seong-hun/nonlocalhost#master
 nonlocalhost <포트> --subdomain <이름>
 ```
+
+전역 설치는 그 시점의 커밋으로 고정되므로, 업데이트하려면 같은 명령으로 다시 설치하거나
+`bun update -g`를 실행한다.
 
 private 레포이므로 실행 환경에 이 저장소에 대한 git 인증(SSH 키 등)이 설정돼 있어야 한다.
 
@@ -30,7 +40,7 @@ private 레포이므로 실행 환경에 이 저장소에 대한 git 인증(SSH 
 대시보드에 로그인(`ADMIN_SEED`로 만든 계정) → "CLI 토큰" 섹션에서 토큰 발급 후:
 
 ```bash
-bunx github:seong-hun/nonlocalhost login
+bunx github:seong-hun/nonlocalhost#master login
 ```
 
 server / token(입력값 화면에 안 보임) / subdomain(선택) / port(선택)를 순서대로 물어보는
@@ -39,7 +49,7 @@ server / token(입력값 화면에 안 보임) / subdomain(선택) / port(선택
 플래그로 특정 항목만 바로 지정해서 프롬프트를 건너뛸 수도 있다.
 
 ```bash
-bunx github:seong-hun/nonlocalhost login --subdomain other-name   # subdomain만 변경
+bunx github:seong-hun/nonlocalhost#master login --subdomain other-name   # subdomain만 변경
 ```
 
 `--server`에는 스킴(`https://`, `wss://`) 없이 `PUBLIC_BASE_DOMAIN` 값만 넣는다 (예:
@@ -50,24 +60,24 @@ subdomain/port는 현재 디렉토리의 `.nonlocalhost.json`에 저장된다 (�
 ### 2. 터널 시작
 
 ```bash
-bunx github:seong-hun/nonlocalhost <포트> --subdomain <이름>
+bunx github:seong-hun/nonlocalhost#master <포트> --subdomain <이름>
 # 또는 명시적으로
-bunx github:seong-hun/nonlocalhost start --port <포트> --subdomain <이름>
+bunx github:seong-hun/nonlocalhost#master start --port <포트> --subdomain <이름>
 ```
 
 로그인 시 subdomain/port까지 저장해뒀다면 인자 없이 그대로 재사용된다:
 
 ```bash
-bunx github:seong-hun/nonlocalhost
+bunx github:seong-hun/nonlocalhost#master
 # 또는
-bunx github:seong-hun/nonlocalhost start
+bunx github:seong-hun/nonlocalhost#master start
 ```
 
 연결되면 `https://<이름>.<도메인>`으로 어디서든(다른 네트워크 포함) 접속 가능. 토큰이 잘못됐거나
 서브도메인이 이미 쓰이는 중이면 무한 재시도 없이 바로 종료하고 원인을 알려준다. `Ctrl+C`로 정상
 종료할 수 있다.
 
-전체 옵션은 `bunx github:seong-hun/nonlocalhost --help` 참고.
+전체 옵션은 `bunx github:seong-hun/nonlocalhost#master --help` 참고.
 
 #### Vite 사용 시
 
