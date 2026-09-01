@@ -13,14 +13,16 @@ import { runLogin } from "./login";
 import { runTunnel } from "./tunnel-client";
 
 async function main() {
-  const [command, ...rest] = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  const [command, ...rest] = argv;
 
   if (command === "login") {
     await runLogin(rest);
     return;
   }
 
-  const args = parseArgs(process.argv.slice(2));
+  // "start" is an optional, explicit alias for the default (positional-port) form
+  const args = parseArgs(command === "start" ? rest : argv);
   const config = await readConfig();
   const project = await readProjectConfig();
 

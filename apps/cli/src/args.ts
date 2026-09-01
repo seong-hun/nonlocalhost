@@ -9,10 +9,12 @@ export interface CliArgs {
 }
 
 const USAGE = `Usage:
-  nonlocalhost <port> [--subdomain <name>] [options]
-  nonlocalhost login [--token <token>] [--server <host>]
+  nonlocalhost [start] <port> [--subdomain <name>] [options]
+  nonlocalhost [start] --port <n> [--subdomain <name>] [options]
+  nonlocalhost login [--token <token>] [--server <host>] [--subdomain <name>] [--port <n>]
 
 Options:
+      --port <n>            port to expose (or pass it positionally, reused from .nonlocalhost.json if omitted)
   -s, --subdomain <name>   public subdomain (reused from .nonlocalhost.json if omitted)
       --token <token>      auth token (falls back to NONLOCALHOST_TOKEN, then saved login)
       --server <host>      tunnel server host (falls back to NONLOCALHOST_SERVER, then saved login)
@@ -23,8 +25,17 @@ Options:
 
 export { USAGE };
 
+function parsePort(raw: string): number {
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(`invalid port: ${raw}\n${USAGE}`);
+  }
+  return port;
+}
+
 export function parseArgs(argv: string[]): CliArgs {
   const positional: string[] = [];
+  let portFlag: number | undefined;
   let subdomain: string | undefined;
   let token: string | undefined;
   let server: string | undefined;
@@ -35,6 +46,9 @@ export function parseArgs(argv: string[]): CliArgs {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     switch (arg) {
+      case "--port":
+        portFlag = parsePort(argv[++i]);
+        break;
       case "--subdomain":
       case "-s":
         subdomain = argv[++i];
@@ -64,13 +78,7 @@ export function parseArgs(argv: string[]): CliArgs {
     }
   }
 
-  let port: number | undefined;
-  if (positional.length > 0) {
-    port = Number(positional[0]);
-    if (!Number.isInteger(port) || port <= 0) {
-      throw new Error(`invalid port: ${positional[0]}\n${USAGE}`);
-    }
-  }
+  const port = positional.length > 0 ? parsePort(positional[0]) : portFlag;
 
   return { port, subdomain, token, server, localHost, insecure, save };
 }

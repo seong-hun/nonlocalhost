@@ -44,4 +44,18 @@ describe("parseArgs", () => {
   test("throws when port is not a number", () => {
     expect(() => parseArgs(["abc", "--subdomain", "myapp"])).toThrow();
   });
+
+  test("accepts port via --port flag", () => {
+    const args = parseArgs(["--port", "8600", "--subdomain", "myapp"]);
+    expect(args.port).toBe(8600);
+  });
+
+  test("positional port wins over --port flag when both are given", () => {
+    const args = parseArgs(["5173", "--port", "8600"]);
+    expect(args.port).toBe(5173);
+  });
+
+  test("throws when --port is not a number", () => {
+    expect(() => parseArgs(["--port", "abc"])).toThrow();
+  });
 });
