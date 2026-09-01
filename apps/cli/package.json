@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build --compile --outfile dist/nonlocalhost src/index.ts",
+    "bundle": "bun build --target bun --outdir dist src/index.ts",
     "test": "bun test"
   },
   "dependencies": {
