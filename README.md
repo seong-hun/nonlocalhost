@@ -53,9 +53,13 @@ bunx github:seong-hun/nonlocalhost#master login --subdomain other-name   # subdo
 ```
 
 `--server`에는 스킴(`https://`, `wss://`) 없이 `PUBLIC_BASE_DOMAIN` 값만 넣는다 (예:
-`tunnel.example.com`). server/token은 `~/.config/nonlocalhost/config.json`에 `0600` 권한으로,
-subdomain/port는 현재 디렉토리의 `.nonlocalhost.json`에 저장된다 (시크릿이 아니라 커밋해도
-무방하지만, 팀원마다 다른 값을 쓰는 게 자연스러워서 기본적으로 `.gitignore`에 들어있다).
+`tunnel.example.com`). server/token은 `~/.config/nonlocalhost/config.json`에 `0600` 권한으로
+저장된다. subdomain/port를 처음 저장하는 순간 프로젝트 디렉토리에 `.nonlocalhost/` 폴더가
+생기는데(supabase CLI의 `.temp/project-ref`와 같은 방식), 여기엔 랜덤 ref 하나만 담긴
+`project-ref` 파일과 그 폴더 전체를 무시하는 `.gitignore`가 자동으로 들어있어 커밋될 일이
+없다. 실제 subdomain/port 값은 이 ref를 키로 `~/.config/nonlocalhost/projects/<ref>.json`에
+저장되므로, 프로젝트 디렉토리를 옮기거나 이름을 바꿔도 설정이 유지되고 git clone으로 새로
+받으면(=ref가 없으면) 새 프로젝트로 취급된다.
 
 ### 2. 터널 시작
 

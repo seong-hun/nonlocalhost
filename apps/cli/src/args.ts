@@ -14,13 +14,13 @@ const USAGE = `Usage:
   nonlocalhost login [--token <token>] [--server <host>] [--subdomain <name>] [--port <n>]
 
 Options:
-      --port <n>            port to expose (or pass it positionally, reused from .nonlocalhost.json if omitted)
-  -s, --subdomain <name>   public subdomain (reused from .nonlocalhost.json if omitted)
+      --port <n>            port to expose (or pass it positionally, reused from saved project config if omitted)
+  -s, --subdomain <name>   public subdomain (reused from saved project config if omitted)
       --token <token>      auth token (falls back to NONLOCALHOST_TOKEN, then saved login)
       --server <host>      tunnel server host (falls back to NONLOCALHOST_SERVER, then saved login)
       --local-host <host>  host to forward to (default: localhost)
       --insecure           use ws/http instead of wss/https
-      --save               remember port/subdomain in .nonlocalhost.json (and token/server via login)
+      --save               remember port/subdomain in the saved project config (and token/server via login)
   -h, --help               show this help`;
 
 export { USAGE };

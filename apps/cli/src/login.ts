@@ -1,8 +1,8 @@
 import * as p from "@clack/prompts";
 import {
   CONFIG_PATH,
-  PROJECT_CONFIG_PATH,
   maskToken,
+  projectConfigLocation,
   readConfig,
   readProjectConfig,
   updateProjectConfig,
@@ -144,6 +144,6 @@ export async function runLogin(argv: string[]): Promise<void> {
 
   p.outro(
     `saved ${maskToken(token)} @ ${server} to ${CONFIG_PATH}` +
-      (subdomain || port ? `, project defaults to ${PROJECT_CONFIG_PATH}` : "")
+      (subdomain || port ? `, project defaults to ${projectConfigLocation()}` : "")
   );
 }

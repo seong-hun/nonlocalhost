@@ -2,8 +2,8 @@
 import { parseArgs, USAGE } from "./args";
 import {
   CONFIG_PATH,
-  PROJECT_CONFIG_PATH,
   maskToken,
+  projectConfigLocation,
   readConfig,
   readProjectConfig,
   writeConfig,
@@ -44,14 +44,14 @@ async function main() {
 
   const port = args.port ?? project.port;
   if (!port) {
-    console.error(`[nonlocalhost] no port given and none saved in ${PROJECT_CONFIG_PATH}\n${USAGE}`);
+    console.error(`[nonlocalhost] no port given and none saved (run with --save to persist)\n${USAGE}`);
     process.exit(1);
   }
 
   const subdomain = args.subdomain ?? project.subdomain;
   if (!subdomain) {
     console.error(
-      `[nonlocalhost] --subdomain is required (none saved in ${PROJECT_CONFIG_PATH})\n${USAGE}`
+      `[nonlocalhost] --subdomain is required (none saved; run with --save to persist)\n${USAGE}`
     );
     process.exit(1);
   }
@@ -67,7 +67,7 @@ async function main() {
       console.log(`[nonlocalhost] saved ${maskToken(token)} @ ${server} to ${CONFIG_PATH}`);
     }
     await writeProjectConfig({ port, subdomain, localHost, insecure });
-    console.log(`[nonlocalhost] saved port/subdomain to ${PROJECT_CONFIG_PATH}`);
+    console.log(`[nonlocalhost] saved port/subdomain to ${projectConfigLocation()}`);
   }
 
   await runTunnel({ server, token, subdomain, localHost, port, insecure });
