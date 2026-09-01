@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # for npm provenance
+  id-token: write # OIDC token for npm trusted publishing (no NPM_TOKEN needed)
 
 jobs:
   publish:
@@ -57,11 +57,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.14.0
           registry-url: https://registry.npmjs.org
+
+      # trusted publishing (OIDC, configured on npmjs.com against this repo +
+      # workflow filename) needs npm >= 11.5.1; setup-node's bundled npm lags behind
+      - run: npm install -g npm@latest
 
       - name: Publish
         working-directory: apps/cli
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

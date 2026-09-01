@@ -135,8 +135,19 @@ bun run apps/cli/src/index.ts <포트> --subdomain <이름>
 ```
 
 CLI를 수정했다면 `apps/cli/package.json`의 `version`을 올리고 `cli-v<version>` 태그를 push하면
-`.github/workflows/publish-cli.yml`이 빌드해서 npm에 publish한다 (예: `v0.1.1` → 태그
-`cli-v0.1.1`). npm에 publish할 계정에 `NPM_TOKEN`을 저장소 secret으로 등록해둬야 한다.
+`.github/workflows/publish-cli.yml`이 빌드해서 npm에 publish한다 (예: `0.1.1` → 태그
+`cli-v0.1.1`).
+
+publish는 장수명 토큰(`NPM_TOKEN`) 없이 **npm Trusted Publishing(OIDC)**으로 인증한다.
+최초 1회 설정이 필요하다:
+
+1. (패키지가 아직 없다면) 로컬에서 한 번 수동으로 publish해서 `nonlocalhost` 패키지를 만든다 —
+   `npm login` 후 CI 워크플로우의 "Strip workspace-only fields" 단계와 동일하게
+   `apps/cli/package.json`을 정리하고 `npm publish --access public`
+2. https://www.npmjs.com → 해당 패키지 → Settings → **Trusted Publisher** → GitHub Actions 선택
+   → Organization/user: `seong-hun`, Repository: `nonlocalhost`,
+   Workflow filename: `publish-cli.yml` (정확히 일치해야 함) 입력 후 저장
+3. 이후로는 `cli-v<version>` 태그 push만 하면 별도 시크릿 없이 자동 publish된다
 
 로컬에서 번들 결과만 확인하고 싶으면:
 
