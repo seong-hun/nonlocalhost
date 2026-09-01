@@ -90,124 +90,6 @@ var require_src = __commonJS((exports, module) => {
   module.exports = { cursor, scroll, erase, beep };
 });
 
-// src/args.ts
-var USAGE = `Usage:
-  nonlocalhost [start] <port> [--subdomain <name>] [options]
-  nonlocalhost [start] --port <n> [--subdomain <name>] [options]
-  nonlocalhost login [--token <token>] [--server <host>] [--subdomain <name>] [--port <n>]
-
-Options:
-      --port <n>            port to expose (or pass it positionally, reused from .nonlocalhost.json if omitted)
-  -s, --subdomain <name>   public subdomain (reused from .nonlocalhost.json if omitted)
-      --token <token>      auth token (falls back to NONLOCALHOST_TOKEN, then saved login)
-      --server <host>      tunnel server host (falls back to NONLOCALHOST_SERVER, then saved login)
-      --local-host <host>  host to forward to (default: localhost)
-      --insecure           use ws/http instead of wss/https
-      --save               remember port/subdomain in .nonlocalhost.json (and token/server via login)
-  -h, --help               show this help`;
-function parsePort(raw) {
-  const port = Number(raw);
-  if (!Number.isInteger(port) || port <= 0) {
-    throw new Error(`invalid port: ${raw}
-${USAGE}`);
-  }
-  return port;
-}
-function parseArgs(argv) {
-  const positional = [];
-  let portFlag;
-  let subdomain;
-  let token;
-  let server;
-  let localHost;
-  let insecure = false;
-  let save = false;
-  for (let i = 0;i < argv.length; i++) {
-    const arg = argv[i];
-    switch (arg) {
-      case "--port":
-        portFlag = parsePort(argv[++i]);
-        break;
-      case "--subdomain":
-      case "-s":
-        subdomain = argv[++i];
-        break;
-      case "--token":
-        token = argv[++i];
-        break;
-      case "--server":
-        server = argv[++i];
-        break;
-      case "--local-host":
-        localHost = argv[++i];
-        break;
-      case "--insecure":
-        insecure = true;
-        break;
-      case "--save":
-        save = true;
-        break;
-      case "--help":
-      case "-h":
-        console.log(USAGE);
-        process.exit(0);
-        break;
-      default:
-        positional.push(arg);
-    }
-  }
-  const port = positional.length > 0 ? parsePort(positional[0]) : portFlag;
-  return { port, subdomain, token, server, localHost, insecure, save };
-}
-
-// src/config.ts
-import { chmod } from "fs/promises";
-import { homedir } from "os";
-import { join, resolve } from "path";
-var CONFIG_DIR = join(homedir(), ".config", "nonlocalhost");
-var CONFIG_PATH = join(CONFIG_DIR, "config.json");
-var PROJECT_CONFIG_PATH = resolve(".nonlocalhost.json");
-async function updateProjectConfig(patch) {
-  const existing = await readProjectConfig();
-  const merged = { ...existing, ...patch };
-  await writeProjectConfig(merged);
-  return merged;
-}
-async function readConfig() {
-  const file = Bun.file(CONFIG_PATH);
-  if (!await file.exists())
-    return {};
-  try {
-    return await file.json();
-  } catch {
-    return {};
-  }
-}
-async function writeConfig(config) {
-  await Bun.write(CONFIG_PATH, `${JSON.stringify(config, null, 2)}
-`);
-  await chmod(CONFIG_PATH, 384);
-}
-async function readProjectConfig() {
-  const file = Bun.file(PROJECT_CONFIG_PATH);
-  if (!await file.exists())
-    return {};
-  try {
-    return await file.json();
-  } catch {
-    return {};
-  }
-}
-async function writeProjectConfig(config) {
-  await Bun.write(PROJECT_CONFIG_PATH, `${JSON.stringify(config, null, 2)}
-`);
-}
-function maskToken(token) {
-  if (token.length <= 8)
-    return "****";
-  return `${token.slice(0, 7)}...${token.slice(-4)}`;
-}
-
 // ../../node_modules/.bun/@clack+core@1.4.3/node_modules/@clack/core/dist/index.mjs
 import { styleText } from "util";
 import { stdout, stdin } from "process";
@@ -1452,6 +1334,154 @@ ${r2}
   }
 }).prompt();
 
+// src/args.ts
+var USAGE = `Usage:
+  nonlocalhost [start] <port> [--subdomain <name>] [options]
+  nonlocalhost [start] --port <n> [--subdomain <name>] [options]
+  nonlocalhost login [--token <token>] [--server <host>] [--subdomain <name>] [--port <n>]
+
+Options:
+      --port <n>            port to expose (or pass it positionally, reused from saved project config if omitted)
+  -s, --subdomain <name>   public subdomain (reused from saved project config if omitted)
+      --token <token>      auth token (falls back to NONLOCALHOST_TOKEN, then saved login)
+      --server <host>      tunnel server host (falls back to NONLOCALHOST_SERVER, then saved login)
+      --local-host <host>  host to forward to (default: localhost)
+      --insecure           use ws/http instead of wss/https
+      --save               remember port/subdomain in the saved project config (and token/server via login)
+  -h, --help               show this help`;
+function parsePort(raw) {
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(`invalid port: ${raw}
+${USAGE}`);
+  }
+  return port;
+}
+function parseArgs(argv) {
+  const positional = [];
+  let portFlag;
+  let subdomain;
+  let token;
+  let server;
+  let localHost;
+  let insecure = false;
+  let save = false;
+  for (let i2 = 0;i2 < argv.length; i2++) {
+    const arg = argv[i2];
+    switch (arg) {
+      case "--port":
+        portFlag = parsePort(argv[++i2]);
+        break;
+      case "--subdomain":
+      case "-s":
+        subdomain = argv[++i2];
+        break;
+      case "--token":
+        token = argv[++i2];
+        break;
+      case "--server":
+        server = argv[++i2];
+        break;
+      case "--local-host":
+        localHost = argv[++i2];
+        break;
+      case "--insecure":
+        insecure = true;
+        break;
+      case "--save":
+        save = true;
+        break;
+      case "--help":
+      case "-h":
+        console.log(USAGE);
+        process.exit(0);
+        break;
+      default:
+        positional.push(arg);
+    }
+  }
+  const port = positional.length > 0 ? parsePort(positional[0]) : portFlag;
+  return { port, subdomain, token, server, localHost, insecure, save };
+}
+
+// src/config.ts
+import { randomUUID } from "crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { chmod } from "fs/promises";
+import { homedir } from "os";
+import { join, resolve } from "path";
+var CONFIG_DIR = join(homedir(), ".config", "nonlocalhost");
+var CONFIG_PATH = join(CONFIG_DIR, "config.json");
+var PROJECTS_DIR = join(CONFIG_DIR, "projects");
+var PROJECT_CWD = resolve(".");
+var PROJECT_MARKER_DIR = join(PROJECT_CWD, ".nonlocalhost");
+var PROJECT_REF_PATH = join(PROJECT_MARKER_DIR, "project-ref");
+function projectConfigPathFor(ref) {
+  return join(PROJECTS_DIR, `${ref}.json`);
+}
+function getProjectRef(create) {
+  if (existsSync(PROJECT_REF_PATH))
+    return readFileSync(PROJECT_REF_PATH, "utf8").trim();
+  if (!create)
+    return;
+  mkdirSync(PROJECT_MARKER_DIR, { recursive: true });
+  const ref = randomUUID();
+  writeFileSync(PROJECT_REF_PATH, `${ref}
+`);
+  writeFileSync(join(PROJECT_MARKER_DIR, ".gitignore"), `*
+`);
+  return ref;
+}
+function projectConfigLocation() {
+  const ref = getProjectRef(false);
+  return ref ? projectConfigPathFor(ref) : `${PROJECTS_DIR}/<new>.json (via ${PROJECT_REF_PATH})`;
+}
+async function updateProjectConfig(patch) {
+  const existing = await readProjectConfig();
+  const merged = { ...existing, ...patch };
+  await writeProjectConfig(merged);
+  return merged;
+}
+async function readConfig() {
+  const file = Bun.file(CONFIG_PATH);
+  if (!await file.exists())
+    return {};
+  try {
+    return await file.json();
+  } catch {
+    return {};
+  }
+}
+async function writeConfig(config) {
+  await Bun.write(CONFIG_PATH, `${JSON.stringify(config, null, 2)}
+`);
+  await chmod(CONFIG_PATH, 384);
+}
+async function readProjectConfig() {
+  const ref = getProjectRef(false);
+  if (!ref)
+    return {};
+  const file = Bun.file(projectConfigPathFor(ref));
+  if (!await file.exists())
+    return {};
+  try {
+    return await file.json();
+  } catch {
+    return {};
+  }
+}
+async function writeProjectConfig(config) {
+  const ref = getProjectRef(true);
+  const withPath = { path: PROJECT_CWD, ...config };
+  await Bun.write(projectConfigPathFor(ref), `${JSON.stringify(withPath, null, 2)}
+`);
+}
+function maskToken(token) {
+  if (token.length <= 8)
+    return "****";
+  return `${token.slice(0, 7)}...${token.slice(-4)}`;
+}
+
 // src/login.ts
 var USAGE2 = "Usage: nonlocalhost login [--token <token>] [--server <host>] [--subdomain <name>] [--port <n>]";
 function parseLoginArgs(argv) {
@@ -1568,7 +1598,7 @@ ${USAGE2}`);
   }
   await writeConfig({ token, server });
   await updateProjectConfig({ subdomain, port });
-  outro(`saved ${maskToken(token)} @ ${server} to ${CONFIG_PATH}` + (subdomain || port ? `, project defaults to ${PROJECT_CONFIG_PATH}` : ""));
+  outro(`saved ${maskToken(token)} @ ${server} to ${CONFIG_PATH}` + (subdomain || port ? `, project defaults to ${projectConfigLocation()}` : ""));
 }
 // ../../packages/shared/src/tunnel-protocol.ts
 function encodeFrame(header, body) {
@@ -1759,6 +1789,35 @@ function printWelcome(opts, subdomain) {
 }
 
 // src/index.ts
+function parsePortAnswer(value) {
+  const n2 = Number(value);
+  return Number.isInteger(n2) && n2 > 0 ? undefined : "\uC22B\uC790(\uD3EC\uD2B8)\uB97C \uC785\uB825\uD558\uC138\uC694";
+}
+async function promptForMissing(port, subdomain) {
+  intro("nonlocalhost");
+  if (!port) {
+    const answer = await text({ message: "Port to expose", validate: parsePortAnswer });
+    if (isCancel(answer)) {
+      cancel("\uCDE8\uC18C\uB428");
+      process.exit(1);
+    }
+    port = Number(answer);
+  }
+  if (!subdomain) {
+    const answer = await text({
+      message: "Public subdomain",
+      validate: (value) => !value ? "subdomain is required" : undefined
+    });
+    if (isCancel(answer)) {
+      cancel("\uCDE8\uC18C\uB428");
+      process.exit(1);
+    }
+    subdomain = answer;
+  }
+  await updateProjectConfig({ port, subdomain });
+  outro(`saved to ${projectConfigLocation()}`);
+  return { port, subdomain };
+}
 async function main() {
   const argv = process.argv.slice(2);
   const [command, ...rest] = argv;
@@ -1779,15 +1838,18 @@ async function main() {
     console.error("[nonlocalhost] no server configured. Run `nonlocalhost login`, pass --server, or set NONLOCALHOST_SERVER.");
     process.exit(1);
   }
-  const port = args.port ?? project.port;
+  let port = args.port ?? project.port;
+  let subdomain = args.subdomain ?? project.subdomain;
+  if ((!port || !subdomain) && process.stdin.isTTY) {
+    ({ port, subdomain } = await promptForMissing(port, subdomain));
+  }
   if (!port) {
-    console.error(`[nonlocalhost] no port given and none saved in ${PROJECT_CONFIG_PATH}
+    console.error(`[nonlocalhost] no port given and none saved
 ${USAGE}`);
     process.exit(1);
   }
-  const subdomain = args.subdomain ?? project.subdomain;
   if (!subdomain) {
-    console.error(`[nonlocalhost] --subdomain is required (none saved in ${PROJECT_CONFIG_PATH})
+    console.error(`[nonlocalhost] --subdomain is required (none saved)
 ${USAGE}`);
     process.exit(1);
   }
@@ -1799,7 +1861,7 @@ ${USAGE}`);
       console.log(`[nonlocalhost] saved ${maskToken(token)} @ ${server} to ${CONFIG_PATH}`);
     }
     await writeProjectConfig({ port, subdomain, localHost, insecure });
-    console.log(`[nonlocalhost] saved port/subdomain to ${PROJECT_CONFIG_PATH}`);
+    console.log(`[nonlocalhost] saved port/subdomain to ${projectConfigLocation()}`);
   }
   await runTunnel({ server, token, subdomain, localHost, port, insecure });
 }
