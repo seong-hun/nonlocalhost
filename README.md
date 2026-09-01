@@ -1,7 +1,7 @@
 # nonlocalhost
 
-Self-hosted ngrok/localtunnel 대체 서비스. `bunx github:seong-hun/nonlocalhost#master <port> --subdomain <name>`
-하나로 로컬 머신의 포트를 `https://<name>.<your-domain>`으로 공개한다. 포트포워딩 없이 클라이언트가
+Self-hosted ngrok/localtunnel 대체 서비스. `bunx nonlocalhost <port> --subdomain <name>` 하나로
+로컬 머신의 포트를 `https://<name>.<your-domain>`으로 공개한다. 포트포워딩 없이 클라이언트가
 서버로 아웃바운드 WebSocket을 열어서 요청을 릴레이하는 구조라 NAT/방화벽 뒤에서도 동작한다.
 
 회원가입 없이 seed admin 계정 하나만 존재하는 개인용 서비스로 설계했다.
@@ -10,37 +10,29 @@ Self-hosted ngrok/localtunnel 대체 서비스. `bunx github:seong-hun/nonlocalh
 
 ## 사용법 (다른 프로젝트에서 터널 클라이언트로 쓰기)
 
-레포를 클론할 필요 없이, 아무 프로젝트 디렉토리에서나 `bunx`로 바로 실행한다.
+npm에 배포된 CLI라, 레포를 클론할 필요 없이 아무 프로젝트 디렉토리에서나 바로 실행한다.
 
 ```bash
-bunx github:seong-hun/nonlocalhost#master <포트> --subdomain <이름>
+bunx nonlocalhost <포트> --subdomain <이름>
+# 또는
+npx nonlocalhost <포트> --subdomain <이름>
 ```
-
-> **`#master`를 꼭 붙일 것.** ref 없이 `github:owner/repo`만 쓰면 bun이 최초 설치 시점의 커밋을
-> 로컬 캐시(`~/.bun/install/cache`)에 영구히 박아두고, 이후엔 GitHub에 재검증 요청조차 안 보낸다
-> — 레포에 새 커밋이 올라가도 계속 옛날 버전이 실행된다. `#master`처럼 ref를 명시하면 실행할
-> 때마다 GitHub API로 그 브랜치의 최신 커밋을 확인하고 받아온다. 이미 ref 없이 실행해서 캐시가
-> 박혀버렸다면 `rm -rf ~/.bun/install/cache/nonlocalhost ~/.bun/install/cache/@GH@seong-hun-nonlocalhost-*`
-> 로 지우고 다시 실행하면 된다.
 
 전역 설치도 가능:
 
 ```bash
-bun add -g github:seong-hun/nonlocalhost#master
+bun add -g nonlocalhost   # 또는: npm install -g nonlocalhost
 nonlocalhost <포트> --subdomain <이름>
 ```
 
-전역 설치는 그 시점의 커밋으로 고정되므로, 업데이트하려면 같은 명령으로 다시 설치하거나
-`bun update -g`를 실행한다.
-
-private 레포이므로 실행 환경에 이 저장소에 대한 git 인증(SSH 키 등)이 설정돼 있어야 한다.
+업데이트는 `bun update -g nonlocalhost` / `npm update -g nonlocalhost`.
 
 ### 1. 로그인
 
 대시보드에 로그인(`ADMIN_SEED`로 만든 계정) → "CLI 토큰" 섹션에서 토큰 발급 후:
 
 ```bash
-bunx github:seong-hun/nonlocalhost#master login
+bunx nonlocalhost login
 ```
 
 server / token(입력값 화면에 안 보임) / subdomain(선택) / port(선택)를 순서대로 물어보는
@@ -49,7 +41,7 @@ server / token(입력값 화면에 안 보임) / subdomain(선택) / port(선택
 플래그로 특정 항목만 바로 지정해서 프롬프트를 건너뛸 수도 있다.
 
 ```bash
-bunx github:seong-hun/nonlocalhost#master login --subdomain other-name   # subdomain만 변경
+bunx nonlocalhost login --subdomain other-name   # subdomain만 변경
 ```
 
 `--server`에는 스킴(`https://`, `wss://`) 없이 `PUBLIC_BASE_DOMAIN` 값만 넣는다 (예:
@@ -64,24 +56,24 @@ bunx github:seong-hun/nonlocalhost#master login --subdomain other-name   # subdo
 ### 2. 터널 시작
 
 ```bash
-bunx github:seong-hun/nonlocalhost#master <포트> --subdomain <이름>
+bunx nonlocalhost <포트> --subdomain <이름>
 # 또는 명시적으로
-bunx github:seong-hun/nonlocalhost#master start --port <포트> --subdomain <이름>
+bunx nonlocalhost start --port <포트> --subdomain <이름>
 ```
 
 로그인 시 subdomain/port까지 저장해뒀다면 인자 없이 그대로 재사용된다:
 
 ```bash
-bunx github:seong-hun/nonlocalhost#master
+bunx nonlocalhost
 # 또는
-bunx github:seong-hun/nonlocalhost#master start
+bunx nonlocalhost start
 ```
 
 연결되면 `https://<이름>.<도메인>`으로 어디서든(다른 네트워크 포함) 접속 가능. 토큰이 잘못됐거나
 서브도메인이 이미 쓰이는 중이면 무한 재시도 없이 바로 종료하고 원인을 알려준다. `Ctrl+C`로 정상
 종료할 수 있다.
 
-전체 옵션은 `bunx github:seong-hun/nonlocalhost#master --help` 참고.
+전체 옵션은 `bunx nonlocalhost --help` 참고.
 
 #### Vite 사용 시
 
@@ -111,8 +103,8 @@ CLI가 연결에 성공하면 필요한 `vite.config.ts` 설정 스니펫을 콘
 - **apps/api** — Hono + Bun. REST API(인증/터널/토큰), 바이너리 프레이밍 WS 프로토콜로 공개
   HTTP 요청을 CLI 클라이언트에게 릴레이, 프로덕션에서는 대시보드 정적 파일도 같이 서빙한다.
 - **apps/web** — Vite + TypeScript + Tailwind + React 대시보드. 터널 목록/상태, CLI 토큰 발급.
-- **apps/cli** — 로컬 머신에서 실행하는 터널 클라이언트. `apps/cli/dist/index.js`로 번들링돼
-  있어서 `bunx`/`bun add -g`로 git에서 바로 설치 가능하고, `bun build --compile`로 단일
+- **apps/cli** — 로컬 머신에서 실행하는 터널 클라이언트. npm에 `nonlocalhost`로 배포되며
+  (`cli-v*` 태그 push 시 GitHub Actions가 빌드/publish), `bun build --compile`로 단일
   바이너리로도 배포 가능.
 - **packages/db** — SQLite(`bun:sqlite`) + Drizzle ORM 스키마/마이그레이션.
 - **packages/shared** — `AppError`, 터널 WS 프로토콜 타입 (api·cli 공용).
@@ -142,10 +134,14 @@ cd apps/web && bun run dev
 bun run apps/cli/src/index.ts <포트> --subdomain <이름>
 ```
 
-CLI를 수정했다면 다른 프로젝트에서 `bunx`로 받는 번들도 갱신해야 한다:
+CLI를 수정했다면 `apps/cli/package.json`의 `version`을 올리고 `cli-v<version>` 태그를 push하면
+`.github/workflows/publish-cli.yml`이 빌드해서 npm에 publish한다 (예: `v0.1.1` → 태그
+`cli-v0.1.1`). npm에 publish할 계정에 `NPM_TOKEN`을 저장소 secret으로 등록해둬야 한다.
+
+로컬에서 번들 결과만 확인하고 싶으면:
 
 ```bash
-cd apps/cli && bun run bundle   # dist/index.js 재생성, 커밋 필요
+cd apps/cli && bun run bundle   # dist/index.js 생성 (git엔 커밋 안 함)
 ```
 
 DB 마이그레이션:

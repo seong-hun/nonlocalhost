@@ -1,10 +1,13 @@
 {
-  "name": "@nonlocalhost/cli",
+  "name": "nonlocalhost",
   "version": "0.1.0",
   "private": true,
+  "description": "Expose a local port through a self-hosted tunnel server.",
+  "license": "MIT",
   "bin": {
     "nonlocalhost": "src/index.ts"
   },
+  "files": ["dist"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build --compile --outfile dist/nonlocalhost src/index.ts",

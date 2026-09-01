@@ -1,7 +1,5 @@
 node_modules/
 dist/
-!apps/cli/dist/
-!apps/cli/dist/**
 *.tsbuildinfo
 data/
 *.db
