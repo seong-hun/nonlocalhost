@@ -12,6 +12,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@clack/prompts": "^1.7.0",
     "@nonlocalhost/shared": "workspace:*"
   },
   "devDependencies": {

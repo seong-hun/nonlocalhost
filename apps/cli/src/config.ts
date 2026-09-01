@@ -20,6 +20,13 @@ export interface ProjectConfig {
   insecure?: boolean;
 }
 
+export async function updateProjectConfig(patch: Partial<ProjectConfig>): Promise<ProjectConfig> {
+  const existing = await readProjectConfig();
+  const merged = { ...existing, ...patch };
+  await writeProjectConfig(merged);
+  return merged;
+}
+
 export async function readConfig(): Promise<StoredConfig> {
   const file = Bun.file(CONFIG_PATH);
   if (!(await file.exists())) return {};
