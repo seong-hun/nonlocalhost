@@ -4,6 +4,11 @@
   "private": true,
   "description": "Expose a local port through a self-hosted tunnel server.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seong-hun/nonlocalhost",
+    "directory": "apps/cli"
+  },
   "bin": {
     "nonlocalhost": "src/index.ts"
   },
